@@ -49,6 +49,13 @@ export default new class Plugin implements PluginDef {
                     match: /(function .{1,2}\(.{1,2}\){)(.{1,40}(?=selectGuild).+?(?:]}\)}\)))(})/,
                     replace: "$1return $self.replacedScreenshareModalComponent(function(){$2}, this, arguments)$3"
                 }
+            },
+            {
+                find: "getApplicationFramerate",
+                replacement: {
+                    match: /getApplicationFramerate:function\(\){return \w+}/,
+                    replace: "getApplicationFramerate:function(){return (e) => e}"
+                }
             }
         ];
         this.settings = definePluginSettings({
