@@ -21,6 +21,8 @@ import { Devs } from "@utils/constants";
 import definePlugin, { OptionType } from "@utils/types";
 import { findByProps } from "@webpack";
 
+import { RestAPI, Constants } from "@webpack/common";
+
 const settings = definePluginSettings({
     spotify: {
         type: OptionType.BOOLEAN,
@@ -55,41 +57,32 @@ export default definePlugin({
             find: 'discordapp.com|discord.com',
             replacement: {
                 match: /\|discordapp.com\|discord\.com\)\$/,
-                replace: (code, funcName) => '|discordapp.com|desktop.tidal.com|discord.com)$'
+                replace: () => '|discordapp.com|desktop.tidal.com|discord.com)$'
             }
         }
     ],
 
     start: async () => {
-        const { socket, localPresenceState } = findByProps('socket');
+        const { socket, state } = findByProps('handleAccountSwitch');
         const ipcServer = findByProps('handleConnection');
-        const endpoints = findByProps('Endpoints').Endpoints;
-        const HTTP = findByProps('HTTP').HTTP;
 
-        const { body } = await HTTP.get({ url: endpoints.CONNECTIONS });
-        let { access_token, id, type } = body.find((endpoint) => endpoint.type === 'spotify');
+        const { body } = await RestAPI.get({ url: Constants.Endpoints.CONNECTIONS });
+        const SPOTIFY_TOKEN_TTL = 10 * 60 * 1000;
 
-        let lastPlayingTrack;
-        let foundTrack;
+        let { access_token, id, type } = body.find((endpoint: any) => endpoint.type === 'spotify');
+
+        let lastPlayingTrack: any;
+        let foundTrack: any;
+
         let abortController: AbortController | undefined;
-
         let lastTokenRefreshAt = Date.now();
 
-        let oldSend = socket.send;
-        let tokenTTL = 10 * 60 * 1000;
-
-        socket.send = function (...params: any) {
-            console.log(params);
-
-            return oldSend.call(this, ...params);
-        };
-
-        ipcServer.on('request', async (client, payload) => {
+        ipcServer.on('request', async (_, payload) => {
             console.log(payload);
 
-            if (Date.now() - lastTokenRefreshAt > tokenTTL) {
+            if (Date.now() - lastTokenRefreshAt > SPOTIFY_TOKEN_TTL) {
                 lastTokenRefreshAt = Date.now();
-                const { body: refreshReqBody } = await HTTP.get({ url: endpoints.CONNECTION_ACCESS_TOKEN(type, id) });
+                const { body: refreshReqBody } = await RestAPI.get({ url: Constants.Endpoints.CONNECTION_ACCESS_TOKEN(type, id) });
                 // const body = await refreshReq
 
                 console.log('refreshed token', refreshReqBody);
@@ -98,7 +91,7 @@ export default definePlugin({
 
             if (payload.cmd === 'TIDAL_RICH_PRESENCE') {
                 const { fullName, duration, isPaused, position } = payload.data;
-                const { status, since, activities, afk, broadcast } = localPresenceState.state;
+                const { status, since, activities, afk, broadcast } = state;
 
                 // If track is not the same then fetch the trackInfo
                 if (!lastPlayingTrack || lastPlayingTrack.fullName != fullName) {

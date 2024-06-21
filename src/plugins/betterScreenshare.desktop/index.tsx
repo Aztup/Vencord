@@ -51,10 +51,17 @@ export default new class Plugin implements PluginDef {
                 }
             },
             {
-                find: "getApplicationFramerate",
+                find: "throw Error(\"Unknown frame rate: \"",
                 replacement: {
-                    match: /getApplicationFramerate:function\(\){return \w+}/,
-                    replace: "getApplicationFramerate:function(){return (e) => e}"
+                    match: /throw Error\("Unknown frame rate: "\.concat\((\w+)\)\)/,
+                    replace: "return $1"
+                }
+            },
+            {
+                find: "max_framerate:",
+                replacement: {
+                    match: /max_framerate\:\w\.maxFrameRate/,
+                    replace: "max_framerate:60"
                 }
             }
         ];

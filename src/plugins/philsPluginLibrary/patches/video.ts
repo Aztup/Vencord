@@ -71,10 +71,10 @@ export function getReplaceableVideoTransportationOptions(connection: types.Conne
             ? {
                 encodingVideoBitRate: videoBitrate * 1000,
                 encodingVideoMinBitRate: videoBitrate * 1000,
-                encodingVideoMaxBitRate: videoBitrate * 1000,
-                callBitRate: videoBitrate * 1000,
-                callMinBitRate: videoBitrate * 1000,
-                callMaxBitRate: videoBitrate * 1000
+                encodingVideoMaxBitRate: Math.round(videoBitrate * 1000),
+                callBitRate: Math.round(videoBitrate * 1000),
+                callMinBitRate: Math.round(videoBitrate * 1000),
+                callMaxBitRate: Math.round(videoBitrate * 1000)
             }
             : {}
         ),
@@ -196,9 +196,9 @@ export function patchConnectionVideoTransportOptions(
         const quality = oldGetQuality.call(this, src);
 
         if (videoBitrateEnabled) {
-            quality.bitrateMax = videoBitrate! * 1000;
-            quality.bitrateMin = videoBitrate! * 1000;
-            quality.bitrateTarget = videoBitrate! * 1000;
+            quality.bitrateMax = Math.round(videoBitrate! * 1000);
+            quality.bitrateMin = Math.round(videoBitrate! * 1000);
+            quality.bitrateTarget = Math.round(videoBitrate! * 1000);
         }
 
         quality.localWant = 100;
