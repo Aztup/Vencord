@@ -36,8 +36,8 @@ export default new class Plugin implements PluginDef {
         this.patches = [{
             find: "Messages.ACCOUNT_A11Y_LABEL",
             replacement: {
-                match: /(?<=function)( .{0,8}(?={).)(.{0,1000}isFullscreenInContext\(\).+?\)]}\))(})/,
-                replace: "$1return $self.replacedUserPanelComponent(function(){$2}, this, arguments)$3"
+                match: /(\w+\.\w+\(\w+,{\w+:function\(\){return) (\w)+}/,
+                replace: '$1 () => $self.replacedUserPanelComponent($2)}'
             }
         }];
         this.replacedUserPanelComponent = replacedUserPanelComponent;
