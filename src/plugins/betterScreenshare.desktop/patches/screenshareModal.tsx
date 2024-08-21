@@ -72,7 +72,7 @@ export function replacedScreenshareModalSettingsContentType(oldType: (...args: a
 export function replacedScreenshareModalComponent(oldComponent: (...args: any[]) => any, thisContext: any, functionArguments: any) {
     const oldComponentResult = Reflect.apply(oldComponent, thisContext, functionArguments);
 
-    const content = oldComponentResult.props.children.props.children[2].props.children[1].props.children[2].props.children.props.children;
+    const content = oldComponentResult.props.children.props.children[2].props.children[1].props.children[3].props.children.props.children;
     const oldContentType = content.type;
 
     content.type = function () {
