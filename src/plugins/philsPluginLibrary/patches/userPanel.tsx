@@ -81,8 +81,9 @@ export const ButtonsSettingsPanel = () => {
         </>;
 };
 
-export function replacedUserPanelComponent(oldComponent) {
-    const componentResult: JSX.Element = oldComponent();
+export function replacedUserPanelComponent() {
+    // @ts-ignore
+    const componentResult: JSX.Element = this.storedComp();
     if (!componentResult?.props) return componentResult;
 
     const { children } = componentResult.props;
