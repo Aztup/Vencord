@@ -36,7 +36,7 @@ export default new class Plugin implements PluginDef {
 
         this.replacedUserPanelComponent = replacedUserPanelComponent.bind(this);
         this.patches = [{
-            find: "Messages.ACCOUNT_A11Y_LABEL",
+            find: "--custom-app-panels-height",
             replacement: {
                 match: /(\w+\.\w+\(\w+,{\w+:function\(\){)return (\w)+}/,
                 replace: '$1 $self.storedComp = $2; return $self.replacedUserPanelComponent}'
