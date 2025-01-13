@@ -23,35 +23,12 @@ import { findByProps } from "@webpack";
 
 import { RestAPI, Constants } from "@webpack/common";
 
-const settings = definePluginSettings({
-    spotify: {
-        type: OptionType.BOOLEAN,
-        description: "Open Spotify links in the Spotify app",
-        default: true,
-    },
-    steam: {
-        type: OptionType.BOOLEAN,
-        description: "Open Steam links in the Steam app",
-        default: true,
-    },
-    epic: {
-        type: OptionType.BOOLEAN,
-        description: "Open Epic Games links in the Epic Games Launcher",
-        default: true,
-    },
-    tidal: {
-        type: OptionType.BOOLEAN,
-        description: "Open Tidal links in the Tidal app",
-        default: true,
-    }
-});
-
 export default definePlugin({
     name: "TidalRichPresence",
-    description: "Open Spotify, Tidal, Steam and Epic Games URLs in their respective apps instead of your browser",
-    authors: [Devs.Nobody],
-    settings,
+    description: "Just a tidal rich presence",
+    authors: [],
 
+    // Allow local websocket to be connected from tidal
     patches: [
         {
             find: 'discordapp.com|discord.com',
@@ -121,7 +98,7 @@ export default definePlugin({
 
                 const tidalActivity = {
                     type: 2,
-                    name: "Spotify",
+                    name: "Tidal",
                     assets: {
                         large_image: `spotify:${foundTrack.album.images[0].url.match(/image\/(\w+)/)[1]}`,
                         large_text: foundTrack.album.name
