@@ -33,15 +33,14 @@ export default new class Plugin implements PluginDef {
         this.name = PluginInfo.PLUGIN_NAME;
         this.description = PluginInfo.DESCRIPTION;
         this.authors = PluginInfo.AUTHORS as PluginAuthor[];
-
-        this.replacedUserPanelComponent = replacedUserPanelComponent.bind(this);
         this.patches = [{
             find: "--custom-app-panels-height",
             replacement: {
-                match: /(\w+\.\w+\(\w+,{\w+:function\(\){)return (\w)+}/,
-                replace: '$1 $self.storedComp = $2; return $self.replacedUserPanelComponent}'
+                match: /{}\)}\),/,
+                replace: "{})}),$self.replacedUserPanelComponent(),"
             }
         }];
+        this.replacedUserPanelComponent = replacedUserPanelComponent;
     }
 };
 

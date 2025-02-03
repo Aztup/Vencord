@@ -81,18 +81,8 @@ export const ButtonsSettingsPanel = () => {
         </>;
 };
 
-export function replacedUserPanelComponent() {
-    // @ts-ignore
-    const componentResult: JSX.Element = this.storedComp();
-    if (!componentResult?.props) return componentResult;
-
-    const { children } = componentResult.props;
-
-    children.splice(children.length - 1, 0,
-        <ButtonsSettingsPanel />
-    );
-
-    return componentResult;
+export function replacedUserPanelComponent(oldComponent) {
+    return <ButtonsSettingsPanel />;
 }
 
 export function addSettingsPanelButton(settings: PanelButton) {
