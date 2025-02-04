@@ -17,65 +17,51 @@
 */
 
 import { definePluginSettings } from "@api/Settings";
-import { DefinedSettings, OptionType, Patch, PluginAuthor, PluginDef, SettingsDefinition } from "@utils/types";
+import { Devs } from "@utils/constants";
+import definePlugin, { OptionType } from "@utils/types";
 
 import { addSettingsPanelButton, Emitter, removeSettingsPanelButton, ScreenshareSettingsIcon } from "../philsPluginLibrary";
 import { PluginInfo } from "./constants";
 import { openScreenshareModal } from "./modals";
 import { ScreenshareAudioPatcher, ScreensharePatcher } from "./patchers";
-import { replacedScreenshareModalComponent } from "./patches";
+import { replacedSubmitFunction, GoLivePanelWrapper } from "./patches";
 import { initScreenshareAudioStore, initScreenshareStore } from "./stores";
 
-export default new class Plugin implements PluginDef {
-    readonly name: string;
-    readonly description: string;
-    readonly authors: PluginAuthor[];
-    readonly patches: Omit<Patch, "plugin">[];
-    readonly settings: DefinedSettings<SettingsDefinition, {}>;
-    readonly dependencies: string[];
-
-    private readonly replacedScreenshareModalComponent: typeof replacedScreenshareModalComponent;
-    public screensharePatcher?: ScreensharePatcher;
-    public screenshareAudioPatcher?: ScreenshareAudioPatcher;
-
-    constructor() {
-        this.name = PluginInfo.PLUGIN_NAME;
-        this.description = PluginInfo.DESCRIPTION;
-        this.authors = [PluginInfo.AUTHOR, ...Object.values(PluginInfo.CONTRIBUTORS)] as PluginAuthor[];
-        this.patches = [
-            {
-                find: "Messages.SCREENSHARE_RELAUNCH",
-                replacement: {
-                    match: /(function .{1,2}\(.{1,2}\){)(.{1,40}(?=selectGuild).+?(?:]}\)}\)))(})/,
-                    replace: "$1return $self.replacedScreenshareModalComponent(function(){$2}, this, arguments)$3"
-                }
-            },
-            {
-                find: "throw Error(\"Unknown frame rate: \"",
-                replacement: {
-                    match: /throw Error\("Unknown frame rate: "\.concat\((\w+)\)\)/,
-                    replace: "return $1"
-                }
-            },
-            {
-                find: "max_framerate:",
-                replacement: {
-                    match: /max_framerate\:\w\.maxFrameRate/,
-                    replace: "max_framerate:60"
-                }
+export default definePlugin({
+    name: "BetterScreenshare",
+    description: "This plugin allows you to further customize your screen sharing.",
+    authors: [Devs.philhk],
+    dependencies: ["PhilsPluginLibrary"],
+    patches: [
+        {
+            find: "GoLiveModal: user cannot be undefined", //Module: 60594; canaryRelease: 364525; L431
+            replacement: {
+                match: /onSubmit:(\w+)/,
+                replace: "onSubmit:$self.replacedSubmitFunction($1)"
             }
-        ];
-        this.settings = definePluginSettings({
-            hideDefaultSettings: {
-                type: OptionType.BOOLEAN,
-                description: "Hide Discord screen sharing settings",
-                default: true,
+        },
+        {
+            find: "StreamSettings: user cannot be undefined", //Module: 641115; canaryRelease: 364525; L254
+            replacement: {
+                match: /\(.{0,10}(,{.{0,100}modalContent)/,
+                replace: "($self.GoLivePanelWrapper$1"
             }
-        });
-        this.dependencies = ["PhilsPluginLibrary"];
-        this.replacedScreenshareModalComponent = replacedScreenshareModalComponent;
-    }
-
+        },
+        {
+            find: "max_framerate:", //This forces discord to display that the stream is at 30 fps (just incase they do some detection for it)
+            replacement: {
+                match: /max_framerate\:\w\.maxFrameRate/,
+                replace: "max_framerate:30"
+            }
+        }
+    ],
+    settings: definePluginSettings({
+        hideDefaultSettings: {
+            type: OptionType.BOOLEAN,
+            description: "Hide Discord screen sharing settings",
+            default: true,
+        }
+    }),
     start(): void {
         initScreenshareStore();
         initScreenshareAudioStore();
@@ -88,13 +74,17 @@ export default new class Plugin implements PluginDef {
             tooltipText: "Screenshare Settings",
             onClick: openScreenshareModal
         });
-    }
-
+    },
     stop(): void {
         this.screensharePatcher?.unpatch();
         this.screenshareAudioPatcher?.unpatch();
         Emitter.removeAllListeners(PluginInfo.PLUGIN_NAME);
 
         removeSettingsPanelButton(PluginInfo.PLUGIN_NAME);
-    }
-};
+    },
+    toolboxActions: {
+        "Open Screenshare Settings": openScreenshareModal
+    },
+    replacedSubmitFunction,
+    GoLivePanelWrapper
+});
