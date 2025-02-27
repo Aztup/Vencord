@@ -34,7 +34,7 @@ export default new class Plugin implements PluginDef {
         this.description = PluginInfo.DESCRIPTION;
         this.authors = PluginInfo.AUTHORS as PluginAuthor[];
         this.patches = [{
-            find: "--custom-app-panels-height",
+            find: "AppPanels",
             replacement: {
                 match: /{}\)}\),/,
                 replace: "{})}),$self.replacedUserPanelComponent(),"

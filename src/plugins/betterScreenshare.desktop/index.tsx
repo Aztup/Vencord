@@ -41,10 +41,10 @@ export default definePlugin({
             }
         },
         {
-            find: "StreamSettings: user cannot be undefined", //Module: 641115; canaryRelease: 364525; L254
+            find: "StreamSettings: user cannot be undefined", //Module: 641115; canaryRelease: 369630; L284
             replacement: {
-                match: /\(.{0,10}(,{.{0,100}modalContent)/,
-                replace: "($self.GoLivePanelWrapper$1"
+                match: /\.jsx\)\(\w+\.\w+(,.{0,100}modalContent)/,
+                replace: ".jsx)($self.GoLivePanelWrapper$1"
             }
         },
         {
