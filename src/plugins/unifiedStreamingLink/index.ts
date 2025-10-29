@@ -65,7 +65,7 @@ const Native = VencordNative.pluginHelpers.unifiedStreamingLink as PluginNative<
 export default definePlugin({
     name: "unifiedStreamingLink",
     description: "Automatically convert platform link to the chosen one",
-    authors: [Devs.Ven, Devs.surgedevs],
+    authors: [Devs.Aztup],
     settings: pluginSettings,
 
     start() {
