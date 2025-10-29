@@ -17,14 +17,11 @@
 */
 
 import { definePluginSettings } from "@api/Settings";
-import vencord from "@components/settings/tabs/vencord";
-import { VENCORD_USER_AGENT } from "@shared/vencordUserAgent";
 import { Devs } from "@utils/constants";
-import definePlugin, { OptionType, PluginNative, SettingsDefinition } from "@utils/types";
+import definePlugin, { OptionType, PluginNative } from "@utils/types";
 import { showToast, Toasts } from "@webpack/common";
-import type { MouseEvent } from "react";
 
-interface URLReplacementRule {
+interface Platform {
     match: RegExp;
     shortlinkMatch?: RegExp;
     name: string;
@@ -32,7 +29,7 @@ interface URLReplacementRule {
 }
 
 // Do not forget to add protocols to the ALLOWED_PROTOCOLS constant
-const UrlReplacementRules: Record<string, URLReplacementRule> = {
+const Platforms: Record<string, Platform> = {
     spotify: {
         match: /^https:\/\/open\.spotify\.com\/(?:intl-[a-z]{2}\/)?(track|album|artist|playlist|user|episode|prerelease)\/(.+)(?:\?.+?)?$/,
         shortlinkMatch: /^https:\/\/spotify\.link\/.+$/,
@@ -55,7 +52,7 @@ const pluginSettings = definePluginSettings({
     platform: {
         type: OptionType.SELECT,
         description: 'thing thing',
-        options: Object.values(UrlReplacementRules).map((rule) => ({ label: rule.name, value: rule.platform }))
+        options: Object.values(Platforms).map((rule) => ({ label: rule.name, value: rule.platform }))
     }
 });
 
@@ -79,7 +76,7 @@ export default definePlugin({
             let url = link.href;
             let detectedPlatform: string | undefined;
 
-            for (const rule of Object.values(UrlReplacementRules)) {
+            for (const rule of Object.values(Platforms)) {
                 if (rule.shortlinkMatch?.test(url)) {
                     event?.preventDefault();
                     url = await Native.resolveRedirect(url);
@@ -94,11 +91,9 @@ export default definePlugin({
 
             if (!detectedPlatform) return;
 
-            showToast(`Fetching ${Object.values(UrlReplacementRules).find((r) => r.platform === platform)?.name} link...`, Toasts.Type.CLOCK);
+            showToast(`Fetching ${Object.values(Platforms).find((r) => r.platform === platform)?.name} link...`, Toasts.Type.CLOCK);
 
             const data = detectedPlatform === platform ? { linksByPlatform: { [platform]: link.href } } : await Native.songLinkReq(link.href);
-
-            console.log(data);
 
             const platformUrl = data.linksByPlatform[platform].url;
             if (!platformUrl) return;
