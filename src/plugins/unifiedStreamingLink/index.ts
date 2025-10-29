@@ -28,7 +28,6 @@ interface Platform {
     platform: string;
 }
 
-// Do not forget to add protocols to the ALLOWED_PROTOCOLS constant
 const Platforms: Record<string, Platform> = {
     spotify: {
         match: /^https:\/\/open\.spotify\.com\/(?:intl-[a-z]{2}\/)?(track|album|artist|playlist|user|episode|prerelease)\/(.+)(?:\?.+?)?$/,
@@ -59,6 +58,8 @@ const pluginSettings = definePluginSettings({
 
 const Native = VencordNative.pluginHelpers.unifiedStreamingLink as PluginNative<typeof import("./native")>;
 
+let clickHandler: any;
+
 export default definePlugin({
     name: "unifiedStreamingLink",
     description: "Automatically convert platform link to the chosen one",
@@ -66,7 +67,7 @@ export default definePlugin({
     settings: pluginSettings,
 
     start() {
-        document.addEventListener('click', async (event) => {
+        clickHandler = document.addEventListener('click', async (event) => {
             const platform = pluginSettings.store.platform;
             if (!platform) return;
 
@@ -107,5 +108,9 @@ export default definePlugin({
                 window.open(platformUrl, '__blank');
             }
         });
+    },
+
+    stop() {
+        document.removeEventListener('click', clickHandler);
     }
 });
