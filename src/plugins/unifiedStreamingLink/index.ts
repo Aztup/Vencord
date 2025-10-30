@@ -1,20 +1,8 @@
 /*
- * Vencord, a modification for Discord's desktop app
- * Copyright (c) 2023 Vendicated and contributors
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ * Vencord, a Discord client mod
+ * Copyright (c) 2025 Vendicated and contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
 
 import { definePluginSettings } from "@api/Settings";
 import { Devs } from "@utils/constants";
@@ -30,28 +18,28 @@ interface Platform {
 
 const Platforms: Record<string, Platform> = {
     spotify: {
-        match: /^https:\/\/open\.spotify\.com\/(?:intl-[a-z]{2}\/)?(track|album|artist|playlist|user|episode|prerelease)\/(.+)(?:\?.+?)?$/,
+        match: /^https:\/\/open\.spotify\.com\/(?:intl-[a-z]{2}\/)?(track|album|artist)\/(.+)(?:\?.+?)?$/,
         shortlinkMatch: /^https:\/\/spotify\.link\/.+$/,
-        name: 'Spotify',
-        platform: 'spotify'
+        name: "Spotify",
+        platform: "spotify"
     },
     tidal: {
-        match: /^https:\/\/tidal\.com\/(?:browse\/)?(track|album|artist|playlist|user|video|mix)\/([^/?]+)(?:[/?].*)?$/,
-        name: 'Tidal',
-        platform: 'tidal'
+        match: /^https:\/\/tidal\.com\/(?:browse\/)?(track|album|artist)\/([^/?]+)(?:[/?].*)?$/,
+        name: "Tidal",
+        platform: "tidal"
     },
     itunes: {
-        match: /^https:\/\/(?:geo\.)?music\.apple\.com\/([a-z]{2}\/)?(album|artist|playlist|song|curator)\/([^/?#]+)\/?([^/?#]+)?(?:\?.*)?(?:#.*)?$/,
-        name: 'Apple Music',
-        platform: 'appleMusic'
+        match: /^https:\/\/(?:geo\.)?music\.apple\.com\/([a-z]{2}\/)?(album|artist|song)\/([^/?#]+)\/?([^/?#]+)?(?:\?.*)?(?:#.*)?$/,
+        name: "Apple Music",
+        platform: "appleMusic"
     },
 };
 
 const pluginSettings = definePluginSettings({
     platform: {
         type: OptionType.SELECT,
-        description: 'thing thing',
-        options: Object.values(Platforms).map((rule) => ({ label: rule.name, value: rule.platform }))
+        description: "What platform to convert the streaming links to",
+        options: Object.values(Platforms).map(rule => ({ label: rule.name, value: rule.platform }))
     }
 });
 
@@ -61,15 +49,15 @@ const Native = VencordNative.pluginHelpers.unifiedStreamingLink as PluginNative<
 let clickHandler: any;
 
 export default definePlugin({
-    name: "unifiedStreamingLink",
+    name: "UnifiedStreamingLink",
     description: "Automatically convert platform link to the chosen one",
     authors: [Devs.Aztup],
     settings: pluginSettings,
 
     start() {
         clickHandler = document.addEventListener('click', async (event) => {
-            const platform = pluginSettings.store.platform;
-            if (!platform) return;
+            const { platform } = pluginSettings.store;
+            if (!platform) return false;
 
             const link = (event.target as HTMLElement).closest('a');
             if (!link) return;
@@ -78,35 +66,38 @@ export default definePlugin({
             let detectedPlatform: string | undefined;
 
             for (const rule of Object.values(Platforms)) {
-                if (rule.shortlinkMatch?.test(url)) {
-                    event?.preventDefault();
-                    url = await Native.resolveRedirect(url);
-                }
-
-                if (rule.match.test(url)) {
+                if (rule.match.test(url) || rule.shortlinkMatch?.test(url)) {
                     detectedPlatform = rule.platform;
-                    event.preventDefault();
+                    event?.preventDefault();
                     break;
                 }
             }
 
-            if (!detectedPlatform) return;
+            if (!detectedPlatform) return false;
 
-            showToast(`Fetching ${Object.values(Platforms).find((r) => r.platform === platform)?.name} link...`, Toasts.Type.CLOCK);
+            let platformUrl: string | undefined;
 
-            const data = detectedPlatform === platform ? { linksByPlatform: { [platform]: link.href } } : await Native.songLinkReq(link.href);
+            if (detectedPlatform === platform) {
+                platformUrl = url;
+            } else {
+                showToast(`Fetching ${Object.values(Platforms).find(r => r.platform === platform)?.name} link...`, Toasts.Type.CLOCK);
+                const res = await Native.songLinkReq(url);
+                console.log(res);
 
-            const platformUrl = data.linksByPlatform[platform].url;
-            if (!platformUrl) return;
+                platformUrl = res.linksByPlatform[platform]?.url;
+            }
 
-            if (Vencord.Plugins.plugins.OpenInApp) {
+            if (Vencord.Plugins.plugins.OpenInApp && platformUrl) {
                 // Force the link to open inside the app instead if the user has the open in app plugin
                 (Vencord.Plugins.plugins.OpenInApp as any).handleLink({
                     href: platformUrl
                 });
-            } else {
-                window.open(platformUrl, '__blank');
+
+                return false;
             }
+
+            // It's probably safe to open URL that match the regex because those are 'trusted' services
+            return window.open(platformUrl ?? url, '__blank');
         });
     },
 
