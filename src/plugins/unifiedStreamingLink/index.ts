@@ -82,7 +82,6 @@ export default definePlugin({
             } else {
                 showToast(`Fetching ${Object.values(Platforms).find(r => r.platform === platform)?.name} link...`, Toasts.Type.CLOCK);
                 const res = await Native.songLinkReq(url);
-                console.log(res);
 
                 platformUrl = res.linksByPlatform[platform]?.url;
             }
