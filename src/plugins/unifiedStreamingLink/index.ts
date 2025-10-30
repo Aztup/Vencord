@@ -24,7 +24,7 @@ const Platforms: Record<string, Platform> = {
         platform: "spotify"
     },
     tidal: {
-        match: /^https:\/\/tidal\.com\/(?:browse\/)?(track|album|artist)\/([^/?]+)(?:[/?].*)?$/,
+        match: /^https:\/\/(?:listen\.)?tidal\.com\/(?:browse\/)?(track|album|artist)\/([a-f0-9-]+).*$/,
         name: "Tidal",
         platform: "tidal"
     },
