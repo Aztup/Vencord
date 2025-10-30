@@ -44,7 +44,7 @@ const pluginSettings = definePluginSettings({
 });
 
 
-const Native = VencordNative.pluginHelpers.unifiedStreamingLink as PluginNative<typeof import("./native")>;
+const Native = VencordNative.pluginHelpers.UnifiedStreamingLink as PluginNative<typeof import("./native")>;
 
 let clickHandler: any;
 
